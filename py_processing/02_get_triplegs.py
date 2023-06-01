@@ -468,7 +468,7 @@ df_geo['geometry']=df_geo['geometry'].apply(lambda x:shapely.geometry.mapping(x)
 # sp vs tpl
 df_geo['kind'] = 'tripleg'
 data = df_geo.to_dict('records')
-connection_string = keys['mongodb+srv://jurner:superpw@ademerci.dg1u3lv.mongodb.net/?retryWrites=true&w=majority&ssl=true']
+connection_string = keys['mongo_connection_string']
 
 client = pymongo.MongoClient(connection_string)
 db = client["ademerci"]
