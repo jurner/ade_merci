@@ -49,16 +49,6 @@ function getMinuteFromTimestamp(timestamp) {
   return minute;
 }
 
-function getNextActivity(number, data) {
-  for (let i = 0; i < data.length; i++) {
-    if (number >= data[i].started && number < data[i].finished) {
-      return data[i];
-    }
-  }
-  console.log("Next activity not found");
-  return {};
-}
-
 const MapView = () => {
   const [time, setTime] = useState(settings.start_time);
   const [animation] = useState({});
@@ -73,9 +63,8 @@ const MapView = () => {
   const [hours, setHours] = useState(1);
   const [loopLength, setLoopLength] = useState(finished);
   const [currentActivity, setCurrentActivity] = useState({});
-  const [initialViewState, setInitialViewState] = useState(
-    settings.initial_view_state
-  );
+  const [viewState, setViewState] = useState(settings.initial_view_state);
+  const running = useStore((state) => state.running);
 
   const animate = () => {
     setTime((t) => {
@@ -89,23 +78,46 @@ const MapView = () => {
 
     animation.id = window.requestAnimationFrame(animate);
   };
+  function getNextActivity(number, data) {
+    for (let i = 0; i < data.length; i++) {
+      if (number >= data[i].started && number < data[i].finished) {
+        console.log("found new activity");
+        return data[i];
+      }
+    }
+    return {};
+  }
+  const calcNextViewState = (c, t) => {
+    let time_since_start = t - c.start_dt;
+    let perc_finished = time_since_start / c.duration;
+    let lon = c.start_lon + (c.end_lon - c.start_lon) * perc_finished;
+    let lat = c.start_lat + (c.end_lat - c.start_lat) * perc_finished;
+    let zoom = c.start_zoom + (c.end_zoom - c.start_zoom) * perc_finished;
+
+    setViewState((prevState) => ({
+      ...prevState,
+      longitude: lon,
+      latitude: lat,
+      zoom: zoom,
+    }));
+  };
 
   const flyToCoord = useCallback((c) => {
-    setInitialViewState({
+    setViewState({
       longitude: c.go_to_coord[0],
       latitude: c.go_to_coord[1],
       zoom: c.zoom,
       pitch: 45,
       bearing: 0,
-      transitionDuration: c.duration / 1.5,
-      transitionInterpolator: new FlyToInterpolator({ curve: c.curve }),
+      //transitionDuration: c.duration / 1.5,
+      //transitionInterpolator: new FlyToInterpolator({ curve: c.curve }),
     });
   }, []);
 
-  useEffect(() => {
-    animation.id = window.requestAnimationFrame(animate);
-    return () => window.cancelAnimationFrame(animation.id);
-  }, [animation, loopLength]);
+  // useEffect(() => {
+  //   animation.id = window.requestAnimationFrame(animate);
+  //   return () => window.cancelAnimationFrame(animation.id);
+  // }, [animation, loopLength]);
 
   useEffect(() => {
     var started = weekly_data[week.toString()].started;
@@ -120,8 +132,8 @@ const MapView = () => {
 
   useEffect(() => {
     camera.forEach((c) => {
-      if (c.timestamp - speed <= time && c.timestamp + speed >= time) {
-        flyToCoord(c);
+      if (c.start_dt <= time && c.end_dt >= time) {
+        calcNextViewState(c, time);
       }
     });
 
@@ -148,6 +160,17 @@ const MapView = () => {
       setMinutes(currentMinutes);
     }
   }, [time]);
+
+  useEffect(() => {
+    //stop animation
+    if (!running) {
+      window.cancelAnimationFrame(animate.id);
+      return;
+    }
+    // start animation
+    animation.id = window.requestAnimationFrame(animate);
+    return () => window.cancelAnimationFrame(animation.id);
+  }, [running, loopLength]);
 
   const layers = [
     new TripsLayer({
@@ -314,7 +337,7 @@ const MapView = () => {
           <Col sm={8}>
             <DeckGL
               layers={layers}
-              initialViewState={initialViewState}
+              initialViewState={viewState}
               controller={true}
             >
               <div

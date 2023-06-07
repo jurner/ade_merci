@@ -1,12 +1,18 @@
 import React, { useRef, useState, useEffect } from "react";
 import Card from "react-bootstrap/Card";
 import "bootstrap/dist/css/bootstrap.min.css";
-import video from "../data/1w.mp4";
+import video from "../data/1se/1w.mp4";
 import useStore from "../appStore";
 import SpeedSlider from "./SpeedSlider";
+import Video from "./Video";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlus, faMinus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronRight,
+  faChevronLeft,
+  faPlay,
+  faPause,
+} from "@fortawesome/free-solid-svg-icons";
 
 import car from "../assets/car.gif";
 import bus from "../assets/bus.gif";
@@ -103,6 +109,8 @@ function getEntryInfo(currentActivity) {
 
 const PostCard = ({ week, data }) => {
   const setWeek = useStore((state) => state.setWeek);
+  const setRunning = useStore((state) => state.setRunning);
+  const running = useStore((state) => state.running);
 
   const incrementWeek = () => {
     let new_val = week + 1;
@@ -113,13 +121,14 @@ const PostCard = ({ week, data }) => {
     setWeek(new_val);
   };
 
+  const toggleRunning = () => {
+    setRunning(!running);
+  };
+
   return (
     <>
       <Card style={{ height: "90vh" }} className="mapCard">
-        <video width="100%" height="auto" controls loop autoPlay muted>
-          <source src={video} type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <Video week={week}></Video>
         <Card.Body>
           <Row>
             <Col sm={3}>
@@ -134,7 +143,7 @@ const PostCard = ({ week, data }) => {
                 }}
                 className="btn rounded-circle"
               >
-                <FontAwesomeIcon icon={faMinus} />
+                <FontAwesomeIcon icon={faChevronLeft} />
               </button>
             </Col>
             <Col sm={6}>
@@ -157,7 +166,7 @@ const PostCard = ({ week, data }) => {
                 }}
                 className="btn rounded-circle"
               >
-                <FontAwesomeIcon icon={faPlus} />
+                <FontAwesomeIcon icon={faChevronRight} />
               </button>
             </Col>
             <hr></hr>
@@ -171,6 +180,22 @@ const PostCard = ({ week, data }) => {
             <Col sm={8}>{getEntryInfo(data)}</Col>
           </Row>
           <SpeedSlider></SpeedSlider>
+          <button
+            disabled={week === 14}
+            onClick={toggleRunning}
+            style={{
+              backgroundColor: "#2a9d8f",
+              color: "white",
+              height: "40px",
+            }}
+            className="btn"
+          >
+            {running ? (
+              <FontAwesomeIcon icon={faPause} />
+            ) : (
+              <FontAwesomeIcon icon={faPlay} />
+            )}
+          </button>
         </Card.Body>
       </Card>
     </>

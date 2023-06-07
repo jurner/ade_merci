@@ -12,6 +12,9 @@ let store = (set) => ({
     speed: 100,
     setSpeed: (newData) => set((state) => ({ speed: newData })),
 
+    running: true,
+    setRunning: (newData) => set((state) => ({ running: newData })),
+
 })
 
 store = devtools(store)
