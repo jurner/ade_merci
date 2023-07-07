@@ -36,6 +36,12 @@ unstacked_tpl.fillna(0, inplace=True)
 for t in types:
     unstacked_tpl[t+'_sum'] = unstacked_tpl[t].cumsum()
 
+unstacked_tpl['distance'] = unstacked_tpl[types].max(axis=1)
+unstacked_tpl['max_column'] = unstacked_tpl[types].idxmax(axis=1)
+unstacked_tpl['distance_vehicle'] = unstacked_tpl.apply(
+    lambda x: x[x['max_column']+'_sum'], axis=1)
+unstacked_tpl['distance_sum'] = unstacked_tpl['distance'].cumsum()
+
 
 # group by week and create dict
 group_dta = all_dta.groupby('week', as_index=False).agg(
@@ -43,7 +49,8 @@ group_dta = all_dta.groupby('week', as_index=False).agg(
 wk_dict = {}
 for i, obj in group_dta.iterrows():
     wk_data = all_dta.loc[all_dta['week'] == obj.week]
-    wk_data = wk_data.merge(unstacked_tpl, on=['started_at', 'finished_at'])
+    wk_data = wk_data.merge(unstacked_tpl[['started_at', 'finished_at', 'distance',
+                            'distance_vehicle', 'distance_sum']], on=['started_at', 'finished_at'])
     data = wk_data.to_json(orient='records')
     infos = {'started': obj.started, 'finished': obj.finished, 'data': data}
     wk_dict[obj.week] = infos

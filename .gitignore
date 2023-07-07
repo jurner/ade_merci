@@ -32,3 +32,8 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+src/assets/sp_icons/data_new.json
+src/assets/sp_icons/data.json
+src/assets/sp_icons/data.png
+src/assets/sp_icons/zoom_to_rect.png
+.vscode/settings.json

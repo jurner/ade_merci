@@ -6,7 +6,7 @@ let store = (set) => ({
     addPerson: (person) =>
         set((state) => ({ people: [...state.people, person]})),
     
-    week: 4,
+    week: 14,
     setWeek: (newData) => set((state) => ({ week: newData })),
 
     speed: 100,

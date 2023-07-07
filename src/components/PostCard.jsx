@@ -5,6 +5,7 @@ import video from "../data/1se/1w.mp4";
 import useStore from "../appStore";
 import SpeedSlider from "./SpeedSlider";
 import Video from "./Video";
+import Distance from "./Distance";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -156,7 +157,7 @@ const PostCard = ({ week, data }) => {
             </Col>
             <Col sm={3}>
               <button
-                disabled={week === 14}
+                disabled={week === 100}
                 onClick={incrementWeek}
                 style={{
                   backgroundColor: "#2a9d8f",
@@ -196,6 +197,7 @@ const PostCard = ({ week, data }) => {
               <FontAwesomeIcon icon={faPlay} />
             )}
           </button>
+          <Distance data={data}></Distance>
         </Card.Body>
       </Card>
     </>

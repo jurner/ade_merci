@@ -12,11 +12,10 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import PostCard from "./PostCard";
 import useStore from "../appStore";
 import FlipClock from "./FlipClock";
-//import createLayers from "./MapLayers"; // Import the createLayers function
 
 import camera from "../data/camera.json";
 import flights from "../data/flights.json";
-import tpl from "../data/triplegs.json";
+import tpl from "../data/tpl.json";
 import weekly_data from "../data/weekly_data.json";
 import sp2 from "../data/sp.json";
 import place_names from "../data/place_names.json";
@@ -81,7 +80,6 @@ const MapView = () => {
   function getNextActivity(number, data) {
     for (let i = 0; i < data.length; i++) {
       if (number >= data[i].started && number < data[i].finished) {
-        console.log("found new activity");
         return data[i];
       }
     }
@@ -118,6 +116,22 @@ const MapView = () => {
   //   animation.id = window.requestAnimationFrame(animate);
   //   return () => window.cancelAnimationFrame(animation.id);
   // }, [animation, loopLength]);
+
+  // function svgToDataURL(svg) {
+  //   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(bed)}`;
+  // }
+
+  function createSVGIcon(name, color, halo) {
+    return `\
+    <svg width="800" height="200" xmlns="http://www.w3.org/2000/svg">
+      <text x="300" y="100" fill="${color}" text-anchor="center" stroke="${halo}" stroke-width="7" alignment-baseline="middle" font-size="50">${name}</text>
+      <text x="300" y="100" fill="${color}" text-anchor="center" alignment-baseline="middle" font-size="50">${name}</text>
+    </svg>`;
+  }
+
+  function svgToDataURL(svg) {
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  }
 
   useEffect(() => {
     var started = weekly_data[week.toString()].started;
@@ -174,7 +188,7 @@ const MapView = () => {
 
   const layers = [
     new TripsLayer({
-      id: "trips",
+      id: 0,
       data: tpl,
       getPath: (d) => d.path,
       getTimestamps: (d) => d.timestamps,
@@ -187,32 +201,9 @@ const MapView = () => {
       currentTime: time,
       shadowEnabled: false,
     }),
-    new IconLayer({
-      id: "icon-layer",
-      data: sp2,
-      extruded: true,
-      // iconAtlas and iconMapping should not be provided
-      // getIcon return an object which contains url to fetch icon of each data point
-      getIcon: (d) => ({
-        // TODO fix path url
-        url: d.icon,
-        width: 50,
-        height: 50,
-        anchorY: 50,
-      }),
-      // icon size is based on data point's contributions, between 2 - 25
-      getSize: (d) => 2,
-      pickable: true,
-      sizeScale: 15,
-      getPosition: (d) => d.coords,
-      getColor: (d) => [255, 140, 0],
-      getFilterValue: (d) => d.started,
-      //filterRange: [0, time],
-      getLineColor: (d) => [0, 0, 0],
-      //extensions: [new DataFilterExtension({ filterSize: 1 })],
-    }),
+
     new PathLayer({
-      id: "path-layer",
+      id: 1,
       data: tpl,
       pickable: true,
       widthScale: 2,
@@ -225,12 +216,62 @@ const MapView = () => {
       filterRange: [0, time],
       extensions: [new DataFilterExtension({ filterSize: 1 })],
     }),
+    new IconLayer({
+      id: 2,
+      data: attractions,
+      extruded: true,
+      getIcon: (d) => ({
+        url: svgToDataURL(createSVGIcon(d.name, "#8a502e", "white")),
+        width: 400,
+        height: 300,
+      }),
+      getSize: (d) => d.size,
+      pickable: false,
+      sizeScale: 75,
+      getPosition: (d) => d.coords,
+      getFilterValue: (d) => d.started,
+      filterRange: [0, time],
+      extensions: [new DataFilterExtension({ filterSize: 1 })],
+    }),
+    new IconLayer({
+      id: 3,
+      data: place_names,
+      extruded: true,
+      getIcon: (d) => ({
+        url: svgToDataURL(createSVGIcon(d.name, "black", "white")),
+        width: 400,
+        height: 300,
+      }),
+      getSize: (d) => d.size,
+      pickable: false,
+      sizeScale: 75,
+      getPosition: (d) => d.coords,
+      getFilterValue: (d) => d.started,
+      filterRange: [0, time],
+      extensions: [new DataFilterExtension({ filterSize: 1 })],
+    }),
+    new IconLayer({
+      id: 5,
+      sp2,
+      pickable: true,
+      getIcon: (d) => ({
+        url: d.icon,
+        width: 128,
+        height: 128,
+        anchorY: 128,
+        mask: true,
+      }),
+      getPosition: (d) => d.coords,
+      sizeScale: 1000,
+      getSize: 1000,
+    }),
     new ArcLayer({
-      id: "arc-layer",
+      id: 4,
       data: flights,
       pickable: true,
-      getWidth: 2,
-      opacity: 0.5,
+      getWidth: 2.5,
+      opacity: 0.8,
+      getHeight: (d) => 0.7,
       getSourcePosition: (d) => d.path[0],
       getTargetPosition: (d) => d.path[d.path.length - 1],
       getSourceColor: (d) => settings.trailColor,
@@ -239,96 +280,7 @@ const MapView = () => {
       filterRange: [0, time],
       extensions: [new DataFilterExtension({ filterSize: 1 })],
     }),
-    new TextLayer({
-      id: "text-layer",
-      data: place_names,
-      pickable: true,
-      getPosition: (d) => d.coords,
-      getText: (d) => d.name,
-      fontFamily: "DIN Pro Medium",
-      //sizeUnits: "meters",
-      getSize: 25,
-      getAngle: 0,
-      getTextAnchor: "middle",
-      getAlignmentBaseline: "center",
-      extruded: true,
-      // background: true,
-      // backgroundPadding: [1, 1],
-      // getBackgroundColor:[255, 255, 255,50],
-      fontSettings: {
-        sdf: true,
-      },
-      getTextOutline: true,
-      getTextOutlineWidth: 10000000,
-      getTextOutlineColor: [255, 255, 255],
-      getTextOutline: () => ({
-        color: [255, 255, 255, 255],
-        size: 100,
-        blur: 2,
-      }),
-      getFilterValue: (d) => d.started,
-      filterRange: [0, time + 3],
-      extensions: [new DataFilterExtension({ filterSize: 1 })],
-    }),
-    new TextLayer({
-      id: "text-layer",
-      data: place_names,
-      pickable: true,
-      getPosition: (d) => d.coords,
-      getText: (d) => d.name,
-      fontFamily: "DIN Pro Medium",
-      getSize: 70,
-      getAngle: 0,
-      getTextAnchor: "middle",
-      getAlignmentBaseline: "center",
-      extruded: true,
-      fontSettings: {
-        sdf: true,
-      },
-      // TODO make outlines working
-      getTextOutline: true,
-      getTextOutlineWidth: 10000000,
-      getTextOutlineColor: [255, 255, 255],
-      getTextOutline: () => ({
-        color: [255, 255, 255, 255],
-        size: 100,
-        blur: 2,
-      }),
-      // background: true,
-      // backgroundPadding: [4, 4],
-      // getBackgroundColor:[255, 255, 255],
-      getFilterValue: (d) => d.started,
-      filterRange: [time, time + 3 * 3600],
-      extensions: [new DataFilterExtension({ filterSize: 1 })],
-    }),
-    new TextLayer({
-      id: "text-layer",
-      data: attractions,
-      pickable: true,
-      getPosition: (d) => d.coords,
-      getText: (d) => d.name,
-      fontFamily: "DIN Pro Medium",
-      sizeUnits: "meters",
-      getSize: 800,
-      getAngle: 0,
-      getTextAnchor: "middle",
-      getAlignmentBaseline: "center",
-      getTextOutline: true,
-      getTextOutlineWidth: 10000000,
-      getFilterValue: (d) => d.started,
-      filterRange: [time - 12 * 3600, time],
-      extensions: [new DataFilterExtension({ filterSize: 1 })],
-    }),
   ];
-  // const layers = createLayers(
-  //   time,
-  //   tpl,
-  //   sp,
-  //   flights,
-  //   place_names,
-  //   attractions,
-  //   settings
-  // ); // Use createLayers to create the layers
 
   return (
     <>

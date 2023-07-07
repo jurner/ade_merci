@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from "react";
-import "bootstrap/dist/css/bootstrap.min.css";
 
 const Video = ({ week }) => {
   const videoRef = useRef(null);
