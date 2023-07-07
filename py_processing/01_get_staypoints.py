@@ -203,12 +203,19 @@ icon_mapping = {
     'gas_pinlet.svg': 'gas-pump-solid.svg',
     'tree_pinlet.svg': 'tree-solid.svg',
     'convenience_pinlet.svg': 'bag-shopping-solid.svg',
-    'hospital-H_pinlet.svg': 'hospital-solid.svg'
+    'hospital-H_pinlet.svg': 'hospital-solid.svg',
+    'golf_pinlet.svg': 'map-pin-solid.svg'
 }
 
+# todo, fix error when new icon types have been added
 gdf_pl['icon'] = gdf_pl['icon'].fillna('generic_pinlet.svg')
-gdf_pl['icon2'] = gdf_pl['icon'].apply(
-    lambda x: icon_mapping[x.split('/')[-1]])
+try:
+    gdf_pl['icon2'] = gdf_pl['icon'].apply(
+        lambda x: icon_mapping[x.split('/')[-1]])
+except:
+    print('could not assign all svg files')
+    gdf_pl['icon2'] = gdf_pl['icon']
+
 
 # save as csv for debugging
 gdf_pl.to_csv('./data/finished_sp.csv')
