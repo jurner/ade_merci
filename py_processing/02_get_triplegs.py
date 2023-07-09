@@ -385,7 +385,7 @@ def get_route(start, end):
 geoms = []
 df_geo['routed'] = False
 for i, obj in df_geo.iterrows():
-    if (obj['map_match'] == False) & (obj['distance'] > 4000) & (obj['activity'] not in ['WALKING', 'FLYING', 'BOATING']):
+    if (obj['map_match'] == False) & (obj['distance'] > 4000) & (obj['activity'] not in ['WALKING', 'FLYING', 'BOATING', 'IN_FERRY']):
         x = obj['path']
         if len(x) > 1:
             start = x[0]

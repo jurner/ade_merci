@@ -53,6 +53,7 @@ const MapView = () => {
   const [animation] = useState({});
   const week = useStore((state) => state.week);
   const speed = useStore((state) => state.speed);
+  const setSpeed = useStore((state) => state.setSpeed);
 
   var started = weekly_data[settings.start_week.toString()].started;
   var finished = weekly_data[settings.start_week.toString()].finished;
@@ -91,6 +92,9 @@ const MapView = () => {
     let lon = c.start_lon + (c.end_lon - c.start_lon) * perc_finished;
     let lat = c.start_lat + (c.end_lat - c.start_lat) * perc_finished;
     let zoom = c.start_zoom + (c.end_zoom - c.start_zoom) * perc_finished;
+    if (c.speed != speed) {
+      setSpeed(c.speed);
+    }
 
     setViewState((prevState) => ({
       ...prevState,
@@ -230,41 +234,59 @@ const MapView = () => {
       sizeScale: 75,
       getPosition: (d) => d.coords,
       getFilterValue: (d) => d.started,
-      filterRange: [0, time],
+      filterRange: [time - 2 * 3600, time + 168 * 3600],
       extensions: [new DataFilterExtension({ filterSize: 1 })],
     }),
-    new IconLayer({
-      id: 3,
-      data: place_names,
-      extruded: true,
-      getIcon: (d) => ({
-        url: svgToDataURL(createSVGIcon(d.name, "black", "white")),
-        width: 400,
-        height: 300,
-      }),
-      getSize: (d) => d.size,
-      pickable: false,
-      sizeScale: 75,
-      getPosition: (d) => d.coords,
-      getFilterValue: (d) => d.started,
-      filterRange: [0, time],
-      extensions: [new DataFilterExtension({ filterSize: 1 })],
-    }),
-    new IconLayer({
-      id: 5,
-      sp2,
-      pickable: true,
-      getIcon: (d) => ({
-        url: d.icon,
-        width: 128,
-        height: 128,
-        anchorY: 128,
-        mask: true,
-      }),
-      getPosition: (d) => d.coords,
-      sizeScale: 1000,
-      getSize: 1000,
-    }),
+
+    // new IconLayer({
+    //   id: 3,
+    //   data: place_names,
+    //   extruded: true,
+    //   getIcon: (d) => ({
+    //     url: svgToDataURL(createSVGIcon(d.name, "#8a502e", "white")),
+    //     width: 400,
+    //     height: 300,
+    //   }),
+    //   getSize: (d) => 2,
+    //   pickable: false,
+    //   sizeScale: 75,
+    //   getPosition: (d) => d.coords,
+    //   getFilterValue: (d) => d.started,
+    //   filterRange: [0, time],
+    //   extensions: [new DataFilterExtension({ filterSize: 1 })],
+    // }),
+    // new IconLayer({
+    //   id: 3,
+    //   data: place_names,
+    //   extruded: true,
+    //   getIcon: (d) => ({
+    //     url: svgToDataURL(createSVGIcon(d.name, "#8a502e", "white")),
+    //     width: 400,
+    //     height: 300,
+    //   }),
+    //   getSize: (d) => d.size,
+    //   pickable: false,
+    //   sizeScale: 75,
+    //   getPosition: (d) => d.coords,
+    //   getFilterValue: (d) => d.started,
+    //   filterRange: [0, time],
+    //   extensions: [new DataFilterExtension({ filterSize: 1 })],
+    // }),
+    // new IconLayer({
+    //   id: 5,
+    //   sp2,
+    //   pickable: true,
+    //   getIcon: (d) => ({
+    //     url: d.icon,
+    //     width: 128,
+    //     height: 128,
+    //     anchorY: 128,
+    //     mask: true,
+    //   }),
+    //   getPosition: (d) => d.coords,
+    //   sizeScale: 1000,
+    //   getSize: 1000,
+    // }),
     new ArcLayer({
       id: 4,
       data: flights,
@@ -274,8 +296,8 @@ const MapView = () => {
       getHeight: (d) => 0.7,
       getSourcePosition: (d) => d.path[0],
       getTargetPosition: (d) => d.path[d.path.length - 1],
-      getSourceColor: (d) => settings.trailColor,
-      getTargetColor: (d) => settings.trailColor,
+      getSourceColor: (d) => settings.flightColor,
+      getTargetColor: (d) => settings.flightColor,
       getFilterValue: (d) => d.timestamps[0],
       filterRange: [0, time],
       extensions: [new DataFilterExtension({ filterSize: 1 })],

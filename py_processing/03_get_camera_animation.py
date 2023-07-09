@@ -14,29 +14,45 @@ sp = pd.read_csv('./data/finished_sp.csv')
 
 tpl.sort_values('started', inplace=True)
 sp.sort_values('started', inplace=True)
+sp['duration'] = (sp.finished-sp.started)/60
 
 
 # create a linear df with every recorded coord and ts as one line
 paths = []
 dates = []
 types = []
+speeds = []
+
 for i, obj in tpl.iterrows():
     path = ast.literal_eval(obj['path'])
     paths += path
     dts = ast.literal_eval(obj['datetimes_unix'])
     dates += dts
     types += [obj['activity'] for i in range(len(dts))]
+    speeds += [100 for i in range(len(dts))]
+
 
 for i, obj in sp.iterrows():
+    time = 100
+    if obj['duration'] > 60:
+        time = 200
+    if obj['duration'] > 120:
+        time = 300
+    if obj['duration'] > 180:
+        time = 1000
     paths.append([obj['lon'], obj['lat']])
     dates.append(obj['started'])
     types.append('sp')
+    speeds.append(time)
 
     paths.append([obj['lon'], obj['lat']])
     dates.append(obj['finished'])
     types.append('sp')
+    speeds.append(time)
 
-df = pd.DataFrame({'date': dates, 'coords': paths, 'types': types})
+
+df = pd.DataFrame({'date': dates, 'coords': paths,
+                  'types': types, 'speeds': speeds})
 df['lon'] = df['coords'].apply(lambda x: x[0])
 df['lat'] = df['coords'].apply(lambda x: x[1])
 
@@ -89,7 +105,8 @@ df = calculate_speed_fast(df)
 
 
 # resample the data
-df = df.resample('3600S', on='timestamp')['speed'].median().reset_index()
+df = df.resample('3600S', on='timestamp')[['speed', 'speeds']].agg(
+    {'speed': 'median', 'speeds': 'min'}).reset_index()
 
 
 def add_gaussian_filter(df, column_name, sigma=1, threshold=3):
@@ -246,8 +263,8 @@ for i, obj in flights.iterrows():
     df_chan.loc[df_chan['timestamp'] == started, 'lat'] = lat
     df_chan.loc[df_chan['curve'] == started, 'lat'] = 5
 
-df = df_chan[['all_dts', 'zoom_level_run', 'lon', 'lat']]
-df.columns = ['start_dt', 'start_zoom', 'start_lon', 'start_lat']
+df = df_chan[['all_dts', 'zoom_level_run', 'lon', 'lat', 'speeds']]
+df.columns = ['start_dt', 'start_zoom', 'start_lon', 'start_lat', 'speed']
 df['end_dt'] = df['start_dt'].shift(-1)
 df['end_lon'] = df['start_lon'].shift(-1)
 df['end_lat'] = df['start_lat'].shift(-1)
@@ -263,6 +280,7 @@ for i, obj in df.iterrows():
     js = {}
     js['start_dt'] = obj['start_dt']
     js['end_dt'] = obj['end_dt']
+    js['speed'] = obj['speed']
 
     js['start_lon'] = obj['start_lon']
     js['start_lat'] = obj['start_lat']

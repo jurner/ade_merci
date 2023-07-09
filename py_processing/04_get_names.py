@@ -22,10 +22,10 @@ pl[['town', 'duration', 'duration_1']]
 pl['unix_sta'] = pd.DatetimeIndex(pl['started_at']).astype(int) // 10**9
 pl['unix_fin'] = pd.DatetimeIndex(pl['finished_at']).astype(int) // 10**9
 
-pl['size'] = 1.1
-pl.loc[pl.duration > 0.5, 'size'] = 1.6
+pl['size'] = 1
+pl.loc[pl.duration > 0.5, 'size'] = 1
 pl.loc[pl.duration > 2.5, 'size'] = 2
-pl.loc[pl.duration > 19, 'size'] = 3
+pl.loc[pl.duration > 19, 'size'] = 2
 
 deck_arr = []
 for i, obj in pl.iterrows():
